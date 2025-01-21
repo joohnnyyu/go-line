@@ -1,4 +1,4 @@
-module poly/pkg/line
+module github.com/jooohnnny/go-line
 
 go 1.23.0
 
