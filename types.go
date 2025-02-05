@@ -8,21 +8,21 @@ type UserProfile struct {
 	Language      string `json:"language,omitempty"`
 }
 
+type MessagesResponse struct {
+	SentMessages []SentMessage `json:"sentMessages"`
+}
+
 type SentMessage struct {
 	ID         string `json:"id"`
 	QuoteToken string `json:"quoteToken"`
 }
 
-type SentMessagesResponse struct {
-	SentMessages []SentMessage `json:"sentMessages"`
+type ValidatePushResponse struct {
+	Message string        `json:"message"` // 主错误消息
+	Details []ErrorDetail `json:"details"` // 错误详情
 }
 
-type MessagePushOptions struct {
-	To       string    `json:"to,omitempty"`
-	Messages []Message `json:"messages,omitempty"`
-}
-
-type Message struct {
-	Type string `json:"type,omitempty"`
-	Text string `json:"text,omitempty"`
+type ErrorDetail struct {
+	Message  string `json:"message"`  // 错误消息
+	Property string `json:"property"` // 相关属性
 }
