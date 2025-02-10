@@ -1,4 +1,4 @@
-module github.com/jooohnnny/go-line
+module github.com/joohnnyyu/go-line
 
 go 1.23.0
 
