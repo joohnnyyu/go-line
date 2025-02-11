@@ -101,13 +101,13 @@ type TemplateMessage struct {
 
 type ButtonTemplate struct {
 	Type                 string        `json:"type"`
-	ThumbnailImageURL    string        `json:"thumbnailImageUrl"`
-	ImageAspectRatio     string        `json:"imageAspectRatio"`
-	ImageSize            string        `json:"imageSize"`
-	ImageBackgroundColor string        `json:"imageBackgroundColor"`
+	ThumbnailImageURL    string        `json:"thumbnailImageUrl,omitempty"`
+	ImageAspectRatio     string        `json:"imageAspectRatio,omitempty"`
+	ImageSize            string        `json:"imageSize,omitempty"`
+	ImageBackgroundColor string        `json:"imageBackgroundColor,omitempty"`
 	Title                string        `json:"title"`
 	Text                 string        `json:"text"`
-	DefaultAction        DefaultAction `json:"defaultAction"`
+	DefaultAction        DefaultAction `json:"defaultAction,omitempty"`
 	Actions              []Action      `json:"actions"`
 }
 
