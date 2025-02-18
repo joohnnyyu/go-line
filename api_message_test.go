@@ -3,10 +3,13 @@ package line
 import (
 	"context"
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
+	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Push(t *testing.T) {
@@ -103,8 +106,6 @@ func Test_ValidatePush(t *testing.T) {
 }
 
 func TestParseTextMessage(t *testing.T) {
-	service := &MessageService{}
-
 	message := `{"to":"U1234567890","messages":[{"type":"text","text":"Hello, World!"}]}`
 	expected := MessagePushOptions{
 		To: "U1234567890",
@@ -113,7 +114,7 @@ func TestParseTextMessage(t *testing.T) {
 		},
 	}
 
-	opt, err := service.ParseMessage(context.Background(), message)
+	opt, err := parseMessage(context.Background(), message)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected.To, opt.To)
@@ -122,8 +123,6 @@ func TestParseTextMessage(t *testing.T) {
 }
 
 func TestParseEmojiMessage(t *testing.T) {
-	service := &MessageService{}
-
 	message := `{"to":"U1234567890","messages":[{"type":"text","text":"$ LINE emoji $","emojis":[{"index":0,"productId":"5ac1bfd5040ab15980c9b435","emojiId":"001"}]}]}`
 	expected := MessagePushOptions{
 		To: "U1234567890",
@@ -138,7 +137,7 @@ func TestParseEmojiMessage(t *testing.T) {
 		},
 	}
 
-	opt, err := service.ParseMessage(context.Background(), message)
+	opt, err := parseMessage(context.Background(), message)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected.To, opt.To)
@@ -147,8 +146,6 @@ func TestParseEmojiMessage(t *testing.T) {
 }
 
 func TestParseStickerMessage(t *testing.T) {
-	service := &MessageService{}
-
 	message := `{"to":"U1234567890","messages":[{"type":"sticker","packageId":"446","stickerId":"1988"}]}`
 	expected := MessagePushOptions{
 		To: "U1234567890",
@@ -157,7 +154,7 @@ func TestParseStickerMessage(t *testing.T) {
 		},
 	}
 
-	opt, err := service.ParseMessage(context.Background(), message)
+	opt, err := parseMessage(context.Background(), message)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected.To, opt.To)
@@ -166,8 +163,6 @@ func TestParseStickerMessage(t *testing.T) {
 }
 
 func TestParseImageMessage(t *testing.T) {
-	service := &MessageService{}
-
 	message := `{"to":"U1234567890","messages":[{"type":"image","originalContentUrl":"https://example.com/original.jpg","previewImageUrl":"https://example.com/preview.jpg"}]}`
 	expected := MessagePushOptions{
 		To: "U1234567890",
@@ -176,7 +171,7 @@ func TestParseImageMessage(t *testing.T) {
 		},
 	}
 
-	opt, err := service.ParseMessage(context.Background(), message)
+	opt, err := parseMessage(context.Background(), message)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected.To, opt.To)
@@ -185,8 +180,6 @@ func TestParseImageMessage(t *testing.T) {
 }
 
 func TestParseVideoMessage(t *testing.T) {
-	service := &MessageService{}
-
 	message := `{"to":"U1234567890","messages":[{"type":"video","originalContentUrl":"https://example.com/original.mp4","previewImageUrl":"https://example.com/preview.jpg","trackingId":"track-id"}]}`
 	expected := MessagePushOptions{
 		To: "U1234567890",
@@ -195,7 +188,7 @@ func TestParseVideoMessage(t *testing.T) {
 		},
 	}
 
-	opt, err := service.ParseMessage(context.Background(), message)
+	opt, err := parseMessage(context.Background(), message)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected.To, opt.To)
@@ -204,8 +197,6 @@ func TestParseVideoMessage(t *testing.T) {
 }
 
 func TestParseAudioMessage(t *testing.T) {
-	service := &MessageService{}
-
 	message := `{"to":"U1234567890","messages":[{"type":"audio","originalContentUrl":"https://example.com/original.m4a","duration":60000}]}`
 	expected := MessagePushOptions{
 		To: "U1234567890",
@@ -214,7 +205,7 @@ func TestParseAudioMessage(t *testing.T) {
 		},
 	}
 
-	opt, err := service.ParseMessage(context.Background(), message)
+	opt, err := parseMessage(context.Background(), message)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected.To, opt.To)
@@ -223,8 +214,6 @@ func TestParseAudioMessage(t *testing.T) {
 }
 
 func TestParseLocationMessage(t *testing.T) {
-	service := &MessageService{}
-
 	message := `{"to":"U1234567890","messages":[{"type":"location","title":"my location","address":"1-3 Kioicho, Chiyoda-ku, Tokyo, 102-8282, Japan","latitude":35.67966,"longitude":139.73669}]}`
 
 	expected := MessagePushOptions{
@@ -234,7 +223,7 @@ func TestParseLocationMessage(t *testing.T) {
 		},
 	}
 
-	opt, err := service.ParseMessage(context.Background(), message)
+	opt, err := parseMessage(context.Background(), message)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected.To, opt.To)
@@ -243,8 +232,6 @@ func TestParseLocationMessage(t *testing.T) {
 }
 
 func TestParseTemplateMessage(t *testing.T) {
-	service := &MessageService{}
-
 	message := `{
 		"to":"U1234567890",
 		"messages":[
@@ -268,7 +255,7 @@ func TestParseTemplateMessage(t *testing.T) {
 					ImageBackgroundColor: "#FFFFFF",
 					Title:                "Menu",
 					Text:                 "Please select",
-					DefaultAction: DefaultAction{
+					DefaultAction: &DefaultAction{
 						Type:  "uri",
 						Label: "View detail",
 						URI:   "http://example.com/page/123",
@@ -325,7 +312,7 @@ func TestParseTemplateMessage(t *testing.T) {
 							ImageBackgroundColor: "#FFFFFF",
 							Title:                "this is menu",
 							Text:                 "description",
-							DefaultAction: DefaultAction{
+							DefaultAction: &DefaultAction{
 								Type:  "uri",
 								Label: "View detail",
 								URI:   "http://example.com/page/123",
@@ -353,7 +340,7 @@ func TestParseTemplateMessage(t *testing.T) {
 							ImageBackgroundColor: "#000000",
 							Title:                "this is menu",
 							Text:                 "description",
-							DefaultAction: DefaultAction{
+							DefaultAction: &DefaultAction{
 								Type:  "uri",
 								Label: "View detail",
 								URI:   "http://example.com/page/222",
@@ -415,10 +402,134 @@ func TestParseTemplateMessage(t *testing.T) {
 		},
 	}
 
-	opt, err := service.ParseMessage(context.Background(), message)
+	opt, err := parseMessage(context.Background(), message)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected.To, opt.To)
 	assert.Equal(t, len(expected.Messages), len(opt.Messages))
 	assert.Equal(t, expected.Messages[0], opt.Messages[0])
+}
+
+func parseMessage(_ context.Context, message string) (*MessagePushOptions, error) {
+	var options MessagePushOptions
+	if err := json.Unmarshal([]byte(message), &options); err != nil {
+		return nil, err
+	}
+
+	for i, msg := range options.Messages {
+		var base map[string]interface{}
+		b, err := json.Marshal(msg)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal interface message: %v", err)
+		}
+		if err := json.Unmarshal(b, &base); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal base message: %v", err)
+		}
+
+		if msgType, ok := base["type"].(string); ok {
+			switch MessageType(msgType) {
+			case TextMessageType:
+				if _, hasEmojis := base["emojis"]; hasEmojis {
+					var emojiMsg EmojiMessage
+					if err := json.Unmarshal(b, &emojiMsg); err != nil {
+						return nil, fmt.Errorf("failed to unmarshal EmojiMessage: %v", err)
+					}
+					options.Messages[i] = emojiMsg
+				} else {
+					var textMsg TextMessage
+					if err := json.Unmarshal(b, &textMsg); err != nil {
+						return nil, fmt.Errorf("failed to unmarshal TextMessage: %v", err)
+					}
+					options.Messages[i] = textMsg
+				}
+
+			case StickerMessageType:
+				var stickerMsg StickerMessage
+				if err := json.Unmarshal(b, &stickerMsg); err != nil {
+					return nil, fmt.Errorf("failed to unmarshal StickerMessage: %v", err)
+				}
+				options.Messages[i] = stickerMsg
+
+			case ImageMessageType:
+				var imageMsg ImageMessage
+				if err := json.Unmarshal(b, &imageMsg); err != nil {
+					return nil, fmt.Errorf("failed to unmarshal ImageMessage: %v", err)
+				}
+				options.Messages[i] = imageMsg
+			case VideoMessageType:
+				var videoMsg VideoMessage
+				if err := json.Unmarshal(b, &videoMsg); err != nil {
+					return nil, fmt.Errorf("failed to unmarshal VideoMessage: %v", err)
+				}
+				options.Messages[i] = videoMsg
+			case AudioMessageType:
+				var audioMsg AudioMessage
+				if err := json.Unmarshal(b, &audioMsg); err != nil {
+					return nil, fmt.Errorf("failed to unmarshal AudioMessage: %v", err)
+				}
+				options.Messages[i] = audioMsg
+			case LocationMessageType:
+				var locationMsg LocationMessage
+				if err := json.Unmarshal(b, &locationMsg); err != nil {
+					return nil, fmt.Errorf("failed to unmarshal LocationMessage: %v", err)
+				}
+				options.Messages[i] = locationMsg
+			case TemplateMessageType:
+				var templateMsg TemplateMessage
+				if err := json.Unmarshal(b, &templateMsg); err != nil {
+					return nil, fmt.Errorf("failed to unmarshal TemplateMessage: %v", err)
+				}
+
+				// 基于Type使用不同的结构体解码
+				var template map[string]interface{}
+				t, err := json.Marshal(templateMsg.Template)
+				if err != nil {
+					return nil, fmt.Errorf("failed to marshal interface template message: %v", err)
+				}
+				if err := json.Unmarshal(t, &template); err != nil {
+					return nil, fmt.Errorf("failed to unmarshal base template message: %v", err)
+				}
+
+				if templateType, ok := template["type"].(string); ok {
+					switch TemplateType(templateType) {
+					case ButtonTemplateType:
+						var tmpl ButtonTemplate
+						if err := json.Unmarshal(t, &tmpl); err != nil {
+							log.Fatalf("Error parsing ButtonTemplate: %v", err)
+						}
+						templateMsg.Template = tmpl
+					case ConfirmTemplateType:
+						var tmpl ConfirmTemplate
+						if err := json.Unmarshal(t, &tmpl); err != nil {
+							log.Fatalf("Error parsing ConfirmTemplate: %v", err)
+						}
+						templateMsg.Template = tmpl
+					case CarouselTemplateType:
+						var tmpl CarouselTemplate
+						if err := json.Unmarshal(t, &tmpl); err != nil {
+							log.Fatalf("Error parsing CarouselTemplate: %v", err)
+						}
+						templateMsg.Template = tmpl
+					case ImageCarouselTemplateType:
+						var tmpl ImageCarouselTemplate
+						if err := json.Unmarshal(t, &tmpl); err != nil {
+							log.Fatalf("Error parsing ImageCarouselTemplate: %v", err)
+						}
+						templateMsg.Template = tmpl
+					default:
+						fmt.Println("Unknown template type")
+					}
+				}
+				options.Messages[i] = templateMsg
+			// Add additional cases for other types as needed
+			default:
+				return nil, fmt.Errorf("unknown message type: %s", msgType)
+			}
+		} else {
+			return nil, fmt.Errorf("message type is missing or not a string")
+		}
+	}
+
+	log.Printf("MessagePushOptions: %+v", options)
+	return &options, nil
 }

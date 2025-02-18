@@ -1,48 +1,45 @@
 package line
 
 import (
-	"context"
 	"net/http"
-
-	"github.com/hashicorp/go-retryablehttp"
 )
 
 type (
-	RetryableHTTPClientOption func(client *retryablehttp.Client)
-	RequestOptionFunc         func(*http.Request) error
+	ClientOptionFunc func(client *Client) error
 )
 
-// WithContext runs the request with the provided context
-func WithContext(ctx context.Context) RequestOptionFunc {
-	return func(req *http.Request) error {
-		*req = *req.WithContext(ctx)
+// WithBaseURL sets the base URL for API requests to a custom endpoint.
+func WithBaseURL(urlStr string) ClientOptionFunc {
+	return func(c *Client) error {
+		return c.setBaseURL(urlStr)
+	}
+}
+
+// WithToken sets the token for API requests to a custom endpoint.
+func WithToken(token string) ClientOptionFunc {
+	return func(c *Client) error {
+		c.token = token
 		return nil
 	}
 }
 
-// WithHeader takes a header name and value and appends it to the request headers.
-func WithHeader(name, value string) RequestOptionFunc {
-	return func(req *http.Request) error {
-		req.Header.Set(name, value)
+func WithUserAgent(userAgent string) ClientOptionFunc {
+	return func(c *Client) error {
+		c.UserAgent = userAgent
 		return nil
 	}
 }
 
-// WithHeaders takes a map of header name/value pairs and appends them to the
-func WithHeaders(headers map[string]string) RequestOptionFunc {
-	return func(req *http.Request) error {
-		for k, v := range headers {
-			req.Header.Set(k, v)
-		}
+func WithClient(httpClient *http.Client) ClientOptionFunc {
+	return func(c *Client) error {
+		c.client = httpClient
 		return nil
 	}
 }
 
-func NewRetryableHTTPClient(opts ...RetryableHTTPClientOption) *http.Client {
-	retryClient := retryablehttp.NewClient()
-	retryClient.Logger = nil
-	for _, opt := range opts {
-		opt(retryClient)
+func WithApiVersionPath(apiVersionPath string) ClientOptionFunc {
+	return func(c *Client) error {
+		c.apiVersionPath = apiVersionPath
+		return nil
 	}
-	return retryClient.StandardClient()
 }

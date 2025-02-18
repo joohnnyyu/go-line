@@ -48,26 +48,37 @@ type Response struct {
 	*http.Response
 }
 
-func NewClient(token string) (*Client, error) {
-	client, err := newClient()
+func NewClient(token string, options ...ClientOptionFunc) (*Client, error) {
+	client, err := newClient(append(
+		options,
+		WithUserAgent(userAgent),
+		WithApiVersionPath(apiVersionPath),
+		WithToken(token))...,
+	)
 	if err != nil {
 		return nil, err
 	}
-	client.token = token
 	return client, nil
 }
 
-func newClient() (*Client, error) {
+func newClient(options ...ClientOptionFunc) (*Client, error) {
 	c := &Client{
-		apiVersionPath: apiVersionPath,
-		UserAgent:      userAgent,
-		ContentType:    contentType,
+		client:      NewRetryableHTTPClient(),
+		ContentType: contentType,
 	}
-	c.client = NewRetryableHTTPClient()
 
 	err := c.setBaseURL(defaultBaseURL)
 	if err != nil {
 		return nil, err
+	}
+
+	for _, fn := range options {
+		if fn == nil {
+			continue
+		}
+		if err := fn(c); err != nil {
+			return nil, err
+		}
 	}
 
 	c.Bot = &BotService{client: c}
@@ -141,11 +152,11 @@ func (c *Client) NewRequest(ctx context.Context, method, path string, opt interf
 		return nil, err
 	}
 
-	for _, fn := range append(c.defaultRequestOptions, options...) {
-		if fn == nil {
+	for _, opt := range append(c.defaultRequestOptions, options...) {
+		if opt == nil {
 			continue
 		}
-		if err := fn(req); err != nil {
+		if err := opt(req); err != nil {
 			return nil, err
 		}
 	}
