@@ -30,7 +30,7 @@ fumpt:
 
 .PHONY: nilaway-install
 nilaway-install:
-	go install go.uber.org/nilaway/cmd/nilaway@latest
+	go install go.uber.org/nilaway/cmd/nilaway@latestber
 
 .PHONY: nilaway
 nilaway:
