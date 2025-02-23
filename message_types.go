@@ -9,8 +9,10 @@ type ValidateMessagePushOptions struct {
 	Messages []Message `json:"messages,omitempty"`
 }
 
-type MessageType string
-type TemplateType string
+type (
+	MessageType  string
+	TemplateType string
+)
 
 const (
 	TextMessageType     MessageType = "text"
@@ -88,7 +90,7 @@ type LocationMessage struct {
 	Longitude float64     `json:"longitude"`
 }
 
-//ImagemapMessage https://developers.line.biz/en/reference/messaging-api/#imagemap-message
+// ImagemapMessage https://developers.line.biz/en/reference/messaging-api/#imagemap-message
 
 // TemplateMessage https://developers.line.biz/en/reference/messaging-api/#template-messages
 type Template interface{}
@@ -125,12 +127,12 @@ type CarouselTemplate struct {
 }
 
 type CarouselColumn struct {
-	ThumbnailImageURL    string        `json:"thumbnailImageUrl"`
-	ImageBackgroundColor string        `json:"imageBackgroundColor"`
-	Title                string        `json:"title"`
-	Text                 string        `json:"text"`
-	DefaultAction        DefaultAction `json:"defaultAction"`
-	Actions              []Action      `json:"actions"`
+	ThumbnailImageURL    string         `json:"thumbnailImageUrl"`
+	ImageBackgroundColor string         `json:"imageBackgroundColor"`
+	Title                string         `json:"title"`
+	Text                 string         `json:"text"`
+	DefaultAction        *DefaultAction `json:"defaultAction"`
+	Actions              []Action       `json:"actions"`
 }
 
 type ImageCarouselTemplate struct {
