@@ -62,13 +62,8 @@ func Test_Push(t *testing.T) {
 func Test_ValidatePush(t *testing.T) {
 	// 创建一个模拟的 HTTP 服务器
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// 验证请求路径和方法
-		if r.URL.Path != "/v2/bot/message/validate/push" {
-			t.Errorf("unexpected path: %s", r.URL.Path)
-		}
-		if r.Method != http.MethodPost {
-			t.Errorf("unexpected method: %s", r.Method)
-		}
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Equal(t, "/v2/bot/message/validate/push", r.URL.Path)
 
 		// 模拟成功的响应
 		response := ValidatePushResponse{}
@@ -89,6 +84,9 @@ func Test_ValidatePush(t *testing.T) {
 	if err != nil {
 		return
 	}
+
+	assert.Equal(t, ts.URL, "http://"+client.baseURL.Host)
+	assert.Equal(t, "/v2/", client.baseURL.Path)
 
 	// 创建 MessageService
 	messageService := &MessageService{client: client}

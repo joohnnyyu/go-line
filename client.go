@@ -67,11 +67,6 @@ func newClient(options ...ClientOptionFunc) (*Client, error) {
 		ContentType: contentType,
 	}
 
-	err := c.setBaseURL(defaultBaseURL)
-	if err != nil {
-		return nil, err
-	}
-
 	for _, fn := range options {
 		if fn == nil {
 			continue
@@ -79,6 +74,10 @@ func newClient(options ...ClientOptionFunc) (*Client, error) {
 		if err := fn(c); err != nil {
 			return nil, err
 		}
+	}
+	err := c.setBaseURL(defaultBaseURL)
+	if err != nil {
+		return nil, err
 	}
 
 	c.Bot = &BotService{client: c}
@@ -190,6 +189,7 @@ func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
 
 	response := newResponse(resp)
 
+	// 重置 Body 为可重复读取的状态
 	err = CheckResponse(resp)
 	if err != nil {
 		// Even though there was an error, we still return the response
