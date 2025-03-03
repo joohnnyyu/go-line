@@ -97,10 +97,6 @@ func (c *Client) setBaseURL(urlStr string) error {
 		return err
 	}
 
-	if !strings.HasSuffix(baseURL.Path, c.apiVersionPath) {
-		baseURL.Path += c.apiVersionPath
-	}
-
 	// Update the base URL of the client.
 	c.baseURL = baseURL
 
@@ -115,8 +111,12 @@ func (c *Client) NewRequest(ctx context.Context, method, path string, opt interf
 	}
 
 	// Set the encoded path data
-	u.RawPath = c.baseURL.Path + path
-	u.Path = c.baseURL.Path + unescaped
+	baseURL := c.baseURL.Path
+	if !strings.HasSuffix(baseURL, c.apiVersionPath) {
+		baseURL += c.apiVersionPath
+	}
+	u.RawPath = baseURL + path
+	u.Path = baseURL + unescaped
 
 	// Create a request specific headers map.
 	reqHeaders := make(http.Header)

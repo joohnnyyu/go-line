@@ -10,41 +10,27 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_Push(t *testing.T) {
 	// 创建一个模拟的 HTTP 服务器
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// 验证请求路径和方法
-		if r.URL.Path != "/v2/bot/message/push" {
-			t.Errorf("unexpected path: %s", r.URL.Path)
-		}
-		if r.Method != http.MethodPost {
-			t.Errorf("unexpected method: %s", r.Method)
-		}
+		assert.Equal(t, "/v2/bot/message/push", r.URL.Path)
+		assert.Equal(t, http.MethodPost, r.Method)
 
-		// 模拟成功的响应
-		response := MessagesResponse{}
+		var req MessagePushOptions
+		assert.NoError(t, json.NewDecoder(r.Body).Decode(&req))
+		assert.Equal(t, "U1234567890", req.To)
+
 		w.WriteHeader(http.StatusOK)
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			return
-		}
+		assert.NoError(t, json.NewEncoder(w).Encode(MessagesResponse{}))
 	}))
 	defer ts.Close()
 
 	// 创建 Client 并设置 baseURL 为模拟服务器的 URL
-	client, err := NewClient("test-token")
-	if err != nil {
-		t.Fatalf("failed to create client: %v", err)
-	}
-	err = client.setBaseURL(ts.URL)
-	if err != nil {
-		return
-	}
-
-	// 创建 MessageService
-	messageService := &MessageService{client: client}
+	client, err := NewClient("test-token", WithBaseURL(ts.URL))
+	require.NoError(t, err)
 
 	// 调用 Push 方法
 	opt := MessagePushOptions{
@@ -53,45 +39,25 @@ func Test_Push(t *testing.T) {
 			TextMessage{Type: TextMessageType, Text: "Hello, World!"},
 		},
 	}
-	_, _, err = messageService.Push(context.Background(), opt)
-	if err != nil {
-		t.Errorf("Push returned error: %v", err)
-	}
+
+	_, _, err = client.Message.Push(context.Background(), opt)
+	require.NoError(t, err)
 }
 
 func Test_ValidatePush(t *testing.T) {
 	// 创建一个模拟的 HTTP 服务器
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// 验证请求路径和方法
-		if r.URL.Path != "/v2/bot/message/validate/push" {
-			t.Errorf("unexpected path: %s", r.URL.Path)
-		}
-		if r.Method != http.MethodPost {
-			t.Errorf("unexpected method: %s", r.Method)
-		}
+		assert.Equal(t, "/v2/bot/message/validate/push", r.URL.Path)
+		assert.Equal(t, http.MethodPost, r.Method)
 
-		// 模拟成功的响应
-		response := ValidatePushResponse{}
 		w.WriteHeader(http.StatusOK)
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			return
-		}
+		assert.NoError(t, json.NewEncoder(w).Encode(ValidatePushResponse{}))
 	}))
 	defer ts.Close()
 
 	// 创建 Client 并设置 baseURL 为模拟服务器的 URL
-	client, err := NewClient("test-token")
-	if err != nil {
-		t.Fatalf("failed to create client: %v", err)
-	}
-	err = client.setBaseURL(ts.URL)
-	if err != nil {
-		return
-	}
-
-	// 创建 MessageService
-	messageService := &MessageService{client: client}
+	client, err := NewClient("test-token", WithBaseURL(ts.URL))
+	require.NoError(t, err)
 
 	// 调用 Push 方法
 	opt := ValidateMessagePushOptions{
@@ -99,10 +65,8 @@ func Test_ValidatePush(t *testing.T) {
 			TextMessage{Type: TextMessageType, Text: "Hello, World!"},
 		},
 	}
-	_, _, err = messageService.ValidatePush(context.Background(), opt)
-	if err != nil {
-		t.Errorf("ValidatePush returned error: %v", err)
-	}
+	_, _, err = client.Message.ValidatePush(context.Background(), opt)
+	assert.NoError(t, err)
 }
 
 func TestParseTextMessage(t *testing.T) {

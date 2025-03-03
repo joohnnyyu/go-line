@@ -5,6 +5,6 @@ Go-Line-SDK is a Go client library for calling [Line API](https://developers.lin
 ##  Installation
 
 ```bash
-go get https://github.com/joohnnyyu/go-line
+go get github.com/joohnnyyu/go-line
 ```
 
